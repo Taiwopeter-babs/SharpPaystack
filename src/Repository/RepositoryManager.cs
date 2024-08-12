@@ -13,6 +13,8 @@ public sealed class RepositoryManager : IRepositoryManager
     private readonly Lazy<ICustomerRepository> _customerRepository;
     private readonly Lazy<IWalletRepository> _walletRepository;
 
+    private readonly Lazy<IBankDetailsRepository> _bankDetailsRepository;
+
 
     public RepositoryManager(DatabaseContext context)
     {
@@ -22,11 +24,15 @@ public sealed class RepositoryManager : IRepositoryManager
 
         _walletRepository = new Lazy<IWalletRepository>(() => new WalletRepository(context));
 
+        _bankDetailsRepository = new Lazy<IBankDetailsRepository>(() => new BankDetailsRepository(context));
+
     }
 
     public ICustomerRepository Customer => _customerRepository.Value;
 
     public IWalletRepository Wallet => _walletRepository.Value;
+
+    public IBankDetailsRepository BankDetails => _bankDetailsRepository.Value;
 
     public async Task SaveAsync() => await _context.SaveChangesAsync();
 

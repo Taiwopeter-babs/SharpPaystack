@@ -8,9 +8,7 @@ public interface IPaystackService
         PaystackCreateCustomerDto customerCreateDto
     );
 
-    Task<VirtualAccountResponse> CreateCustomerVirtualAccount(
-        PaystackCreateVirtualAccountDto virtualAccountCreateDto
-    );
+    Task<VirtualAccountResponse> CreateCustomerVirtualAccount(string customerCode);
 
     Task<PaystackTransferResponse> Transfer(decimal amount, string recipient);
 }

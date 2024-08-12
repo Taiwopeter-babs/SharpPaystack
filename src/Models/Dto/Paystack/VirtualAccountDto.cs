@@ -1,36 +1,36 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace SharpPayStack.Models;
 
 
 public record PaystackCreateVirtualAccountDto
 {
-    [JsonProperty("customer")]
+    [JsonPropertyName("customer")]
     public required string Customer { get; init; }
 
-    [JsonProperty("preferred_bank")]
+    [JsonPropertyName("preferred_bank")]
     public required string PreferredBank { get; init; }
 
 }
 
 public record VirtualAccountBank
 {
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public required int Id { get; init; }
 }
 
 public record VirtualAccountResponse : PaystackResponseDto
 {
-    [JsonProperty("account_name")]
+    [JsonPropertyName("account_name")]
     public required string AccountName { get; init; }
 
-    [JsonProperty("account_number")]
+    [JsonPropertyName("account_number")]
     public required string AccountNumber { get; init; }
 
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public required int Id { get; init; }
 
     public required VirtualAccountBank Bank { get; init; }

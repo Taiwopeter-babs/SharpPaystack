@@ -4,14 +4,22 @@ namespace SharpPayStack.Extensions;
 
 public static class CustomerExtension
 {
-    public static PaystackCreateCustomerDto ToPaystackDto(this CustomerCreateDto customerDto)
+    public static PaystackCreateCustomerDto ToPaystackDto(this Customer customer)
     {
         return new PaystackCreateCustomerDto
         {
-            Email = customerDto.Email,
-            Phone = customerDto.Phone,
-            FirstName = customerDto.FirstName,
-            LastName = customerDto.LastName,
+            Email = customer.Email,
+            Phone = customer.Phone,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+        };
+    }
+
+    public static CreateWalletDto ToCreateWalletDto(this Customer customer)
+    {
+        return new CreateWalletDto
+        {
+            CustomerId = customer.Id,
         };
     }
 }

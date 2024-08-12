@@ -89,6 +89,7 @@ public static class ServiceExtensions
     public static void ConfigurePaymentServices(this IServiceCollection services)
     {
         services.AddScoped<IPaystackService, PaystackService>();
+        services.AddScoped<IAccountService, AccountService>();
     }
 
     // <summary>

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using FluentResults;
+using SharpPayStack.Exceptions;
 using SharpPayStack.Interfaces;
 using SharpPayStack.Models;
 using SharpPayStack.Utilities;
@@ -16,7 +17,7 @@ public class WalletService : IWalletService
         _repo = repo;
     }
 
-    public async Task<Result<WalletDto>> CreateWalletAsync(CreateWalletDto walletDto)
+    public async Task<Result<Wallet>> CreateWalletAsync(CreateWalletDto walletDto)
     {
         try
         {
@@ -24,19 +25,19 @@ public class WalletService : IWalletService
 
             if (walletExists != null)
             {
-                return Result.Ok(_mapper.Map<WalletDto>(walletExists));
+                return Result.Ok(walletExists);
             }
 
             Wallet wallet = _mapper.Map<Wallet>(walletDto);
 
             await _repo.SaveAsync();
 
-            return Result.Ok(_mapper.Map<WalletDto>(wallet));
+            return Result.Ok(wallet);
         }
         catch (Exception)
         {
-            string message = $"An error occured with wallet creation for: {walletDto.CustomerId}";
-            return Result.Fail(CommonErrors.ServerError(message));
+            // log error message
+            throw new WalletNotCreatedException(walletDto.CustomerId);
         }
 
     }
@@ -46,7 +47,7 @@ public class WalletService : IWalletService
         try
         {
             Wallet? wallet = await CheckWalletAsync(wa =>
-            wa.Id.Equals(walletId) && wa.CustomerId.Equals(customerId));
+                wa.Id.Equals(walletId) && wa.CustomerId.Equals(customerId));
 
             if (wallet == null)
                 return Result.Fail(WalletErrors.WalletNotFoundError(walletId, customerId));
@@ -55,10 +56,7 @@ public class WalletService : IWalletService
         }
         catch (Exception)
         {
-            string message = string.Format(@"An error occured with retrieval of wallet 
-                        {0} for customer: {1}", walletId, customerId);
-
-            return Result.Fail(CommonErrors.ServerError(message));
+            throw new WalletNotRetrievedException(walletId, customerId);
         }
     }
 

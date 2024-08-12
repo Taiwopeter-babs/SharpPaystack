@@ -13,3 +13,14 @@ public record BankDetailsDto
 
     public int CustomerId { get; init; }
 }
+
+public record CreateBankDetailsDto
+{
+    public string? BankName { get; init; }
+
+    public string? AccountNumber { get; init; }
+
+    public string? AccountName { get; init; }
+
+    public int CustomerId { get; init; }
+}

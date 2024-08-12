@@ -9,6 +9,8 @@ public interface IRepositoryManager
 
     IWalletRepository Wallet { get; }
 
+    IBankDetailsRepository BankDetails { get; }
+
     Task SaveAsync();
 
     public IDbContextTransaction GetTransactionObject();

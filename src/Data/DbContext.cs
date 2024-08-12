@@ -19,20 +19,29 @@ public class DatabaseContext : IdentityDbContext<User>
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // USER
         modelBuilder.Entity<User>()
             .Property(user => user.Role)
             .HasDefaultValue(Role.User)
             .HasConversion<string>();
 
+        // TRANSACTION
         modelBuilder.Entity<Transaction>()
             .Property(tr => tr.Status)
             .HasDefaultValue(TransactionStatus.PENDING)
             .HasConversion<string>();
+
+        // WALLET
 
         // Configure Wallet Balance precision and default value
         modelBuilder.Entity<Wallet>()
             .Property(wallet => wallet.Balance)
             .HasPrecision(12, 2)
             .HasDefaultValue(0.00);
+
+        // Configure Wallet Default currency value
+        modelBuilder.Entity<Wallet>()
+           .Property(wallet => wallet.Currency)
+           .HasDefaultValue("NGN");
     }
 }

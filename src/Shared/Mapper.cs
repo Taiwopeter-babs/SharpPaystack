@@ -22,5 +22,6 @@ public class MapperProfile : Profile
 
         // BankDetails Mapping 
         CreateMap<BankDetails, BankDetailsDto>().ForSourceMember(src => src.Customer, opt => opt.DoNotValidate());
+        CreateMap<CreateBankDetailsDto, BankDetails>();
     }
 }

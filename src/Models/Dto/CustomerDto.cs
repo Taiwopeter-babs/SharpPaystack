@@ -14,9 +14,11 @@ public record CustomerDto : BaseCustomerDto
 {
     public int Id { get; init; }
 
-    public string? Email { get; init; }
+    public required string Email { get; init; }
 
-    public Wallet? Wallet { get; init; }
+    public required BankDetails BankDetails { get; init; }
+
+    public required Wallet Wallet { get; init; }
 }
 
 public record CustomerCreateDto : BaseCustomerDto

@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
+using SharpPayStack.Exceptions;
 using SharpPayStack.Interfaces;
 using SharpPayStack.Models;
 using SharpPayStack.Utilities;
@@ -12,14 +13,22 @@ public class CustomerService : ICustomerService
     private readonly IRepositoryManager _repo;
     private readonly IMapper _mapper;
 
-    public CustomerService(IMapper mapper, IRepositoryManager repo)
+    private readonly IAccountService _accountService;
+
+    public CustomerService(
+        IMapper mapper,
+        IRepositoryManager repo,
+        IAccountService accountService
+    )
     {
         _mapper = mapper;
         _repo = repo;
+        _accountService = accountService;
     }
 
     public async Task<Result<CustomerDto>> CreateCustomerAsync(CustomerCreateDto customerDto)
     {
+        using var transaction = _repo.GetTransactionObject();
         try
         {
             Customer? customer = await _repo.Customer.GetCustomerAsync(cu => cu.Email == customerDto.Email);
@@ -33,24 +42,41 @@ public class CustomerService : ICustomerService
 
             _repo.Customer.CreateCustomer(customerEntity);
 
-            // begin transaction
-            /// TODO Move transaction to the top of the method scope
-            using var transaction = _repo.GetTransactionObject();
+            await _repo.SaveAsync();
 
-            // create a cross service class that depends on WalletService, CustomerService, and Paystack service
-            // create wallet for customer
+            // create savepoint
+            await transaction.CreateSavepointAsync("BeforeWalletCreation");
 
-            // create paystack customer and virtual account
+            var result = await _accountService.CreateCustomerAccount(customerEntity);
 
-            // create bankDetails
+            if (result.IsFailed)
+                return Result.Fail(result.Errors);
 
             await _repo.SaveAsync();
+            await transaction.CommitAsync();
 
             return Result.Ok(_mapper.Map<CustomerDto>(customerEntity));
         }
-        catch (Exception)
+        catch (Exception ex) when (
+            ex is WalletNotCreatedException || ex is PaystackCustomerNotCreatedException
+            || ex is BankDetailsNotCreatedException || ex is PaystackVirtualAccountException
+        )
         {
-            return Result.Fail(CommonErrors.ServerError($"A error occured while creating {customerDto.Email}"));
+            await transaction.RollbackToSavepointAsync("BeforeWalletCreation");
+
+            string message = $"Error occured while creating wallet for {customerDto.Email}, {ex.Message}";
+
+            return Result.Fail(CommonErrors.ServerError(message));
+        }
+        catch (Exception ex)
+        {
+            string message = $"A error occured while creating a customer for {customerDto.Email}, {ex.Message}";
+
+            return Result.Fail(CommonErrors.ServerError(message));
+        }
+        finally
+        {
+            await transaction.DisposeAsync();
         }
     }
 
