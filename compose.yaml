@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: sharppaystack-postgres-db
+    restart: always
+
+    secrets:
+      - db-password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: sharppaystack_db
+      POSTGRES_PASSWORD: sharppaystack_password
+      POSTGRES_USER: sharppaystack_user
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+
+    # healthcheck:
+    #   test: [ "CMD", "pg_isready" ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+
+volumes:
+  postgres-data:
+

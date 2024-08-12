@@ -1,0 +1,6 @@
+@SharpPayStack_HostAddress = http://localhost:5062
+
+GET {{SharpPayStack_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
