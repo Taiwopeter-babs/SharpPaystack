@@ -35,24 +35,26 @@ public class AccountService : IAccountService
             // create paystack customer
             var paystackCustomerPayload = customer.ToPaystackDto();
 
-            var paystackCustomer = await _paystackService.CreateCustomer(paystackCustomerPayload);
+            var paystackCustomerResult = await _paystackService.CreateCustomer(paystackCustomerPayload);
 
-            if (!paystackCustomer.Status)
-                throw new PaystackCustomerNotCreatedException(customer.Email!);
+            if (paystackCustomerResult.IsFailed)
+                return Result.Fail(paystackCustomerResult.Errors);
 
             // create dedicated virtual account
-            var dedicatedVirtualAccount = await _paystackService
-                .CreateCustomerVirtualAccount(paystackCustomer.Data.CustomerCode!);
+            string customerCode = paystackCustomerResult.Value.Data.CustomerCode!;
 
-            if (!dedicatedVirtualAccount.Status)
-                throw new PaystackVirtualAccountException(paystackCustomer.Data.CustomerCode!);
+            var dedicatedVirtualAccountResult = await _paystackService
+                .CreateCustomerVirtualAccount(customerCode);
+
+            if (dedicatedVirtualAccountResult.IsFailed)
+                return Result.Fail(dedicatedVirtualAccountResult.Errors);
 
             // add bank details
             var bankDetailsDto = new CreateBankDetailsDto
             {
-                BankName = dedicatedVirtualAccount.Bank.Name,
-                AccountName = dedicatedVirtualAccount.AccountName,
-                AccountNumber = dedicatedVirtualAccount.AccountNumber,
+                BankName = dedicatedVirtualAccountResult.Value.Bank.Name,
+                AccountName = dedicatedVirtualAccountResult.Value.AccountName,
+                AccountNumber = dedicatedVirtualAccountResult.Value.AccountNumber,
                 CustomerId = customer.Id
             };
 

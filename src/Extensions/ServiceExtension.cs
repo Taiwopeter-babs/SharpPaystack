@@ -8,7 +8,7 @@ using SharpPayStack.Services;
 using SharpPayStack.Repository;
 using SharpPayStack.Data;
 using SharpPayStack.Utilities;
-using Refit;
+using Microsoft.Extensions.Options;
 
 
 namespace SharpPayStack.Extensions;
@@ -86,10 +86,12 @@ public static class ServiceExtensions
     /// Configure Payment Services
     /// </summary>
     /// <param name="services"></param>
-    public static void ConfigurePaymentServices(this IServiceCollection services)
+    public static void ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IPaystackService, PaystackService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<IBankDetailsService, BankDetailsService>();
     }
 
     // <summary>
@@ -114,7 +116,14 @@ public static class ServiceExtensions
 
     public static void ConfigureApiClients(this IServiceCollection services)
     {
-        services.AddRefitClient<IPaystackApi>()
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.paystack.co"));
+
+        services.AddHttpClient<IPaystackService, PaystackService>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<PaystackOptions>>().Value;
+
+            client.DefaultRequestHeaders.Add("Authorization", options.PaystackSecret);
+
+            client.BaseAddress = new Uri("https://api.paystack.co");
+        }).SetHandlerLifetime(TimeSpan.FromMinutes(2));
     }
 }

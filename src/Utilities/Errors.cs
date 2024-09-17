@@ -22,3 +22,8 @@ public static class WalletErrors
     public static Error WalletNotFoundError(int walletId, int customerId) =>
         new($"Wallet with id {walletId} was not found for customer: {customerId}");
 }
+
+public static class PaystackErrors
+{
+    public static Error ErrorMessage(string message) => new(message);
+}

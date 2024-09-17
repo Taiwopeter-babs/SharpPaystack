@@ -72,7 +72,7 @@ public class WalletService : IWalletService
         }
         catch (Exception)
         {
-            string message = string.Format("An error occured with the retreival of wallets");
+            string message = string.Format("An error occured with the retrieval of wallets");
 
             return Result.Fail(CommonErrors.ServerError(message));
         }

@@ -4,40 +4,49 @@ using SharpPayStack.Data;
 using SharpPayStack.Utilities;
 using Microsoft.Extensions.Options;
 using SharpPayStack.Exceptions;
+using FluentResults;
 
 namespace SharpPayStack.Services;
 
 public class PaystackService : IPaystackService
 {
-    private readonly IPaystackApi _payStackApi;
     private readonly PaystackOptions _options;
+    private readonly HttpClient _httpClient;
+
+
 
     public PaystackService(
-        IPaystackApi paystackApi,
-        IOptions<PaystackOptions> options
+        IOptions<PaystackOptions> options,
+        HttpClient httpClient
         )
     {
-        _payStackApi = paystackApi;
         _options = options.Value;
+        _httpClient = httpClient;
     }
 
     private const string TransferReason = "Transfer";
 
-    public async Task<CreateCustomerResponseDto> CreateCustomer(
+    /// <summary>
+    /// <b>Create a paystack customer</b>
+    /// </summary>
+    public async Task<Result<CreateCustomerResponseDto>> CreateCustomer(
         PaystackCreateCustomerDto customerCreateDto
     )
     {
         try
         {
-            var paystackCustomer = await _payStackApi
-                .CreateCustomer(customerCreateDto, _options.PaystackSecret!);
+            var response = await _httpClient.PostAsJsonAsync("customer", customerCreateDto);
 
+            if (!response.IsSuccessStatusCode)
+            {
+                var paystackError = await response.Content.ReadFromJsonAsync<PaystackError>();
 
-            if (!paystackCustomer.Status)
-                throw new PaystackCustomerNotCreatedException(customerCreateDto.Email!);
+                return Result.Fail(PaystackErrors.ErrorMessage(string.Join(',', paystackError!.Message)));
+            }
 
+            var paystackCustomer = await response.Content.ReadFromJsonAsync<CreateCustomerResponseDto>();
 
-            return paystackCustomer;
+            return Result.Ok(paystackCustomer!);
         }
         catch (Exception)
         {
@@ -45,7 +54,7 @@ public class PaystackService : IPaystackService
         }
     }
 
-    public async Task<VirtualAccountResponse>
+    public async Task<Result<VirtualAccountResponse>>
         CreateCustomerVirtualAccount(string customerCode)
     {
         try
@@ -56,12 +65,18 @@ public class PaystackService : IPaystackService
                 PreferredBank = _options.PaystackBank!,
             };
 
-            var data = await _payStackApi.CreateCustomerVirtualAccount(payload, _options.PaystackSecret!);
+            var response = await _httpClient.PostAsJsonAsync("dedicated_account", payload);
 
-            if (!data.Status)
-                throw new PaystackVirtualAccountException(customerCode);
+            if (!response.IsSuccessStatusCode)
+            {
+                var paystackError = await response.Content.ReadFromJsonAsync<PaystackError>();
 
-            return data;
+                return Result.Fail(PaystackErrors.ErrorMessage(string.Join(',', paystackError!.Message)));
+            }
+            var data = await response.Content.ReadFromJsonAsync<VirtualAccountResponse>();
+
+
+            return Result.Ok(data!);
         }
         catch (Exception)
         {
@@ -69,7 +84,7 @@ public class PaystackService : IPaystackService
         }
     }
 
-    public async Task<PaystackTransferResponse> Transfer(decimal amount, string recipient)
+    public async Task<Result<PaystackTransferResponse>> Transfer(decimal amount, string recipient)
     {
         try
         {
@@ -81,9 +96,18 @@ public class PaystackService : IPaystackService
                 Reason = TransferReason
             };
 
-            var data = await _payStackApi.TransferFunds(payload, _options.PaystackSecret!);
+            var response = await _httpClient.PostAsJsonAsync("transfer", payload);
 
-            return data;
+            if (!response.IsSuccessStatusCode)
+            {
+                var paystackError = await response.Content.ReadFromJsonAsync<PaystackError>();
+
+                return Result.Fail(PaystackErrors.ErrorMessage(string.Join(',', paystackError!.Message)));
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<PaystackTransferResponse>();
+
+            return Result.Ok(data!);
         }
         catch (Exception)
         {

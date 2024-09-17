@@ -21,7 +21,13 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.ConfigureDatabaseContext(builder.Configuration);
 builder.Services.ConfigureCors();
 builder.Services.ConfigureIdentity();
+builder.Services.ConfigureOptions(builder.Configuration);
+builder.Services.ConfigureApiClients();
+builder.Services.ConfigureValidators();
+builder.Services.ConfigureServices();
+builder.Services.ConfigureManagers();
 builder.Services.AddAuthentication();
+
 
 
 var app = builder.Build();

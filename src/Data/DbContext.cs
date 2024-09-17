@@ -19,6 +19,8 @@ public class DatabaseContext : IdentityDbContext<User>
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         // USER
         modelBuilder.Entity<User>()
             .Property(user => user.Role)

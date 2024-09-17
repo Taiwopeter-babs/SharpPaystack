@@ -101,30 +101,31 @@ public class CustomerService : ICustomerService
         }
     }
 
-    public async Task<Result<CustomerDto>> GetCustomerAsync(int customerId)
+    public async Task<ApiResponse<CustomerDto>> GetCustomerAsync(int customerId)
     {
         try
         {
             Customer? customer = await _repo.Customer.GetCustomerAsync(cu => cu.Id == customerId);
 
             return customer == null
-                ? Result.Fail(CustomerErrors.CustomerNotFoundError(customerId))
-                : Result.Ok(_mapper.Map<CustomerDto>(customer));
+                ? ApiResult<CustomerDto>.NotFound($"Customer with the id: {customerId} was not found")
+                : ApiResult<CustomerDto>.Ok(_mapper.Map<CustomerDto>(customer), "success");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine(ex);
             string message = $"An error occured while retrieving customer: {customerId}";
-            return Result.Fail(CommonErrors.ServerError(message));
+            return ApiResult<CustomerDto>.ServerError(CommonErrors.ServerError(message).Message);
         }
     }
 
-    public Task<List<CustomerDto>> GetCustomersAsync()
-    {
-        throw new NotImplementedException();
-    }
+    // public Task<List<CustomerDto>> GetCustomersAsync()
+    // {
+    //     throw new NotImplementedException();
+    // }
 
-    public Task<CustomerDto> UpdateCustomerAsync(CustomerUpdateDto customer)
-    {
-        throw new NotImplementedException();
-    }
+    // public Task<CustomerDto> UpdateCustomerAsync(CustomerUpdateDto customer)
+    // {
+    //     throw new NotImplementedException();
+    // }
 }
